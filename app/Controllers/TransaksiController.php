@@ -31,15 +31,49 @@ class TransaksiController extends BaseController
         return view('v_keranjang', $data);
     }
 
+    public function profile()
+{
+    $username = session()->get('username');
+    $data['username'] = $username;
+
+    $buy = $this->transaction->where('username', $username)->findAll();
+    $data['buy'] = $buy;
+
+    $product = [];
+
+    if (!empty($buy)) {
+        foreach ($buy as $item) {
+            $detail = $this->transaction_detail->select('transaction_detail.*, product.nama, product.harga, product.foto')->join('product', 'transaction_detail.product_id=product.id')->where('transaction_id', $item['id'])->findAll();
+
+            if (!empty($detail)) {
+                $product[$item['id']] = $detail;
+            }
+        }
+    }
+
+    $data['product'] = $product;
+
+    return view('v_profile', $data);
+}
+
     public function cart_add()
     {
-        $this->cart->insert(array(
-            'id'        => $this->request->getPost('id'),
-            'qty'       => 1,
-            'price'     => $this->request->getPost('harga'),
-            'name'      => $this->request->getPost('nama'),
-            'options'   => array('foto' => $this->request->getPost('foto'))
-        ));
+        $hargaAsli = $this->request->getPost('harga');
+        $diskon = session()->get('diskon') ?? 0;
+        $hargaDiskon = $hargaAsli - $diskon;
+
+        $this->cart->insert([
+        'id'      => $this->request->getPost('id'),
+        'qty'     => 1,
+        'price'   => $hargaDiskon,
+        'name'    => $this->request->getPost('nama'),
+        'options' => [
+        'foto' => $this->request->getPost('foto'),
+        'harga_asli' => $hargaAsli,
+        'diskon' => $diskon
+        ]
+        ]);
+
         session()->setflashdata('success', 'Produk berhasil ditambahkan ke keranjang. (<a href="' . base_url() . 'keranjang">Lihat</a>)');
         return redirect()->to(base_url('/'));
     }
@@ -79,6 +113,34 @@ class TransaksiController extends BaseController
 
     return view('v_checkout', $data);
 }
+public function form_upload($id)
+{
+    $transaksi = $this->transaction->find($id);
+    if (!$transaksi) {
+        throw new \CodeIgniter\Exceptions\PageNotFoundException("Transaksi tidak ditemukan");
+    }
+
+    return view('v_upload_bukti', ['transaksi' => $transaksi]);
+}
+
+public function upload_bukti($id)
+{
+    $file = $this->request->getFile('bukti');
+
+    if ($file->isValid() && !$file->hasMoved()) {
+        $newName = $file->getRandomName();
+        $file->move('uploads/bukti', $newName);
+
+        $this->transaction->update($id, [
+            'bukti' => $newName
+        ]);
+
+        return redirect()->to('/')->with('success', 'Bukti pembayaran berhasil diupload');
+    }
+
+    return redirect()->back()->with('failed', 'Upload gagal');
+}
+
 
 public function getLocation()
 {
@@ -156,11 +218,14 @@ public function buy()
         $last_insert_id = $this->transaction->getInsertID();
 
         foreach ($this->cart->contents() as $value) {
+            $diskon = $value['options']['diskon'] ?? 0;
+            $hargaAsli = $value['options']['harga_asli'] ?? $value['price'];
+
             $dataFormDetail = [
                 'transaction_id' => $last_insert_id,
                 'product_id' => $value['id'],
                 'jumlah' => $value['qty'],
-                'diskon' => 0,
+                'diskon' => $value['options']['diskon'] ?? 0,
                 'subtotal_harga' => $value['qty'] * $value['price'],
                 'created_at' => date("Y-m-d H:i:s"),
                 'updated_at' => date("Y-m-d H:i:s")

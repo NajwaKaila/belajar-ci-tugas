@@ -6,15 +6,19 @@ use App\Controllers\BaseController;
 use CodeIgniter\HTTP\ResponseInterface;
 
 use App\Models\UserModel;
+use App\Models\DiskonModel;
+
 
 class AuthController extends BaseController
 {
     protected $user;
+    protected $diskonModel;
 
     function __construct()
 {
     helper('form');
     $this->user = new UserModel();
+    $this->diskonModel = new DiskonModel();
 }
 
 public function login()
@@ -29,7 +33,7 @@ public function login()
             $username = $this->request->getVar('username');
             $password = $this->request->getVar('password');
 
-            $dataUser = $this->user->where(['username' => $username])->first(); //pasw 1234567
+            $dataUser = $this->user->where(['username' => $username])->first();
 
             if ($dataUser) {
                 if (password_verify($password, $dataUser['password'])) {
@@ -38,6 +42,15 @@ public function login()
                         'role' => $dataUser['role'],
                         'isLoggedIn' => TRUE
                     ]);
+
+                    // Tambah diskon ke session
+                    $todayDiskon = $this->diskonModel
+                        ->where('tanggal', date('Y-m-d'))
+                        ->first();
+
+                    if ($todayDiskon) {
+                        session()->set('diskon', $todayDiskon['nominal']);
+                    }
 
                     return redirect()->to(base_url('/'));
                 } else {
@@ -56,6 +69,7 @@ public function login()
 
     return view('v_login');
 }
+
 
 public function logout()
 {

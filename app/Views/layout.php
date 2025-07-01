@@ -18,6 +18,8 @@ if(uri_string()!=""){
   <!-- Favicons -->
   <link href="<?= base_url()?>NiceAdmin/assets/img/favicon.png" rel="icon">
   <link href="<?= base_url()?>NiceAdmin/assets/img/apple-touch-icon.png" rel="apple-touch-icon">
+  <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
+
 
   <!-- Google Fonts -->
   <link href="https://fonts.gstatic.com" rel="preconnect">
@@ -47,6 +49,13 @@ if(uri_string()!=""){
 <body>
 
  <?= $this->include('components/header') ?>
+
+  <!-- ALERT DISKON -->
+    <?php if (session()->has('diskon')): ?>
+        <div class="alert alert-success text-center">
+            Hari ini ada diskon <?= number_format(session('diskon')) ?> per item!
+        </div>
+    <?php endif; ?>
 
   <?= $this->include('components/sidebar') ?>
 
