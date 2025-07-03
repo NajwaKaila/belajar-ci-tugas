@@ -46,19 +46,26 @@ class ApiController extends ResourceController
         if ($headers["Key"] == $this->apiKey) {
             $penjualan = $this->transaction->findAll();
             
-            foreach ($penjualan as &$pj) {
-                $pj['details'] = $this->transaction_detail->where('transaction_id', $pj['id'])->findAll();
+            foreach ($penjualan as &$transaksi) {
+                $jumlah = $this->transaction_detail
+                    ->where('transaction_id', $transaksi['id'])
+                    ->selectSum('jumlah')
+                    ->first();
+                
+                $transaksi['jumlah_item'] = $jumlah['jumlah'] ?? 0;
+                $transaksi['status_text'] = $transaksi['status'] == 1 ? 'Sudah Selesai' : 'Belum Selesai';
             }
 
             $data['status'] = ["code" => 200, "description" => "OK"];
             $data['results'] = $penjualan;
-
+            
         }
     } 
 
     return $this->respond($data);
-
+    
 }
+
     /**
      * Return the properties of a resource object.
      *

@@ -31,7 +31,7 @@ class TransaksiController extends BaseController
         return view('v_keranjang', $data);
     }
 
-    public function profile()
+   public function profile()
 {
     $username = session()->get('username');
     $data['username'] = $username;
@@ -43,11 +43,11 @@ class TransaksiController extends BaseController
 
     if (!empty($buy)) {
         foreach ($buy as $item) {
-            $detail = $this->transaction_detail->select('transaction_detail.*, product.nama, product.harga, product.foto')->join('product', 'transaction_detail.product_id=product.id')->where('transaction_id', $item['id'])->findAll();
-
-            if (!empty($detail)) {
-                $product[$item['id']] = $detail;
-            }
+            $product[$item['id']] = $this->transaction_detail
+                ->select('transaction_detail.jumlah, transaction_detail.diskon, product.harga, product.nama, product.foto')
+                ->join('product', 'transaction_detail.product_id = product.id')
+                ->where('transaction_id', $item['id'])
+                ->findAll();
         }
     }
 
@@ -55,6 +55,7 @@ class TransaksiController extends BaseController
 
     return view('v_profile', $data);
 }
+
 
     public function cart_add()
     {
@@ -122,25 +123,6 @@ public function form_upload($id)
 
     return view('v_upload_bukti', ['transaksi' => $transaksi]);
 }
-
-public function upload_bukti($id)
-{
-    $file = $this->request->getFile('bukti');
-
-    if ($file->isValid() && !$file->hasMoved()) {
-        $newName = $file->getRandomName();
-        $file->move('uploads/bukti', $newName);
-
-        $this->transaction->update($id, [
-            'bukti' => $newName
-        ]);
-
-        return redirect()->to('/')->with('success', 'Bukti pembayaran berhasil diupload');
-    }
-
-    return redirect()->back()->with('failed', 'Upload gagal');
-}
-
 
 public function getLocation()
 {

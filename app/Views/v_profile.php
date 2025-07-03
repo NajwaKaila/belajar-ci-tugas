@@ -43,14 +43,34 @@ History Transaksi Pembelian <strong><?= $username ?></strong>
                                     <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
                                 </div>
                                 <div class="modal-body">
-                                    <?php if ($item['bukti']): ?>
-    <p><strong>Bukti Transfer:</strong><br>
-    <img src="<?= base_url('uploads/bukti/' . $item['bukti']) ?>" alt="Bukti" width="100">
-    </p>
-<?php else: ?>
-    <p class="text-danger">Belum upload bukti transfer</p>
-    <a href="<?= base_url('upload-bukti/' . $item['id']) ?>" class="btn btn-warning btn-sm">Upload Bukti</a>
+                                    <div class="modal-body">
+  <?php if (!empty($product[$item['id']])) : ?>
+      <?php foreach ($product[$item['id']] as $idx => $detail) : ?>
+          <div class="border rounded p-2 mb-2">
+              <div class="fw-bold mb-2">
+  <?= ($idx + 1) ?> <?= $detail['nama'] ?>
+  <span class="text-primary">IDR <?= number_format($detail['harga'], 0, ',', '.') ?></span>
+</div>
+
+<?php if (!empty($detail['foto'])) : ?>
+  <div class="mb-2">
+    <img src="<?= base_url('uploads/' . $detail['foto']) ?>" alt="<?= $detail['nama'] ?>" class="img-thumbnail" style="max-height: 100px;">
+  </div>
 <?php endif; ?>
+
+              <div class="text-muted">(<?= $detail['jumlah'] ?> pcs)</div>
+              <?php 
+                $diskon = $detail['diskon'] ?? 0;
+                $harga_asli = $detail['harga'];
+                $harga_setelah_diskon = $harga_asli - $diskon;
+              ?>
+              <div><strong>Harga Setelah Diskon:</strong> 
+                IDR <?= number_format($harga_setelah_diskon, 0, ',', '.') ?>
+              </div>
+          </div>
+      <?php endforeach; ?>
+  <?php endif; ?>
+</div>
 
                                   <?php foreach ($product[$item['id']] as $p): ?>
 <tr>

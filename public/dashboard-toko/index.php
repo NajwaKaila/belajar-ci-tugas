@@ -49,7 +49,7 @@
             <th style="width: 5%;">No</th>
             <th style="width: 10%;">Username</th>
             <th style="width: 30%;">Alamat</th>
-            <th style="width: 10%;">Total Harga</th>
+            <th style="width: 20%;">Total Harga<br>(Jumlah Item)</th>
             <th style="width: 10%;">Ongkir</th>
             <th style="width: 10%;">Status</th>
             <th style="width: 25%;">Tanggal Transaksi</th>
@@ -75,8 +75,11 @@
                                     <?= $item1->alamat; ?>
                                 </td>
                                 <td>
-                                    <?= $item1->total_harga; ?>
+                                    <?= number_format($item1->total_harga, 0, ',', '.') ?> 
+                                    <br>
+                                    <small class="text-muted">(<?= $item1->jumlah_item ?? '0' ?> item)</small>
                                 </td>
+
                                 <td>
                                     <?= $item1->ongkir; ?>
                                 </td>
@@ -84,7 +87,7 @@
                                     <?= $item1->status; ?>
                                 </td>
                                 <td>
-                                    <?= $item1->created_at; ?>
+                                    <?= $item1->status_text ?? 'Tidak Diketahui'; ?>
                                 </td>
                             </tr> 
                             <?php

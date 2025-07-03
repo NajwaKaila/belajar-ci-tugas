@@ -49,7 +49,7 @@ public function login()
                         ->first();
 
                     if ($todayDiskon) {
-                        session()->set('diskon', $todayDiskon['nominal']);
+                        session()->set('nominal_diskon', $todayDiskon['nominal']);
                     }
 
                     return redirect()->to(base_url('/'));
